@@ -1,6 +1,5 @@
 from models import *
 import pandas as pd
-import requests
 
 
 def get_vehicle_locations():
