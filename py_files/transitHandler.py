@@ -1,43 +1,39 @@
 from py_files.models import *
 from py_files.transit_map import *
 import pandas as pd
+import os
 def init_map(route):
-    map = add_vehicles_and_stops_to_map(route)
-    map.save('templates/map.html')
-    get_stops_and_buses_location()
+    vehicles = get_vehicles(route)
+    map = add_vehicles_and_stops_to_map(vehicles)
 
 
-def get_stops_and_buses_location():
-    create_tables()
-    get_vehicle_locations()
-    get_stop_info()
 
+def get_routes_from_database():
+    routes = get_routes()
+    return routes
+def get_vehicle_locations(route):
+    locations = pd.read_json(f'http://svc.metrotransit.org/NexTrip/VehicleLocations/{route}?format=json', orient='columns')
+    return locations
 
-def get_vehicle_locations():
-    locations = pd.read_json('http://svc.metrotransit.org/NexTrip/VehicleLocations/0?format=json', orient='columns')
-    add_vehicles_to_database(locations)
-
-def add_vehicles_to_database(locations):
+def add_vehicles_to_database(route):
+    locations = get_vehicle_locations(route)
     replace_vehicles()
     for index, row in locations.iterrows():
         add_vehicle(row)
 
-def add_vehicles_and_stops_to_map(route):
-    vehicles = get_vehicles(route)
-    stops = get_stops()
-    meanLat = 0.0
-    meanLon = 0.0
+def add_vehicles_and_stops_to_map(vehicles):
     query = get_mean_locations()
+    meanLon = 0.0
+    meanLat = 0.0
     for row in query:
         meanLat = row.meanLat
         meanLon = row.meanLon
-    map = get_main_map(meanLat, meanLon, vehicles, stops)
+    map = get_main_map(meanLat, meanLon, vehicles)
     return map
 
 def get_stop_info():
     stops = pd.read_csv('transit_schedule/stops.txt')
-    add_stops_to_database(stops)
-
+    return stops
 
 
 def add_stops_to_database(stops):

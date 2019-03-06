@@ -1,12 +1,25 @@
 import folium
+from bs4 import BeautifulSoup as Soup
 
-def get_main_map(boundX, boundY, vehicles, stops):
-    main_map = folium.Map(location=[boundX, boundY], zoom_start=6)
-    main_map = add_bus_feature_group(main_map, vehicles, stops)
-    main_map.save(outfile="templates/map.html")
+def get_main_map(boundX, boundY, vehicles):
+    map = folium.Map(location=[boundX, boundY], zoom_start=12)
+    map = add_bus_feature_group(map, vehicles)
+    map.save('templates/map.html')
+    html = """
+        <form method="GET" action="/">
+        <button type="submit">
+            Back to home
+        </button>
+        </form>
+        """
+    with open("templates/map.html") as f:
+        soup = Soup(f)
+    map_html = soup.find('div')
+    soup.div.insert_before(html)
 
-def add_bus_feature_group(map, buses, stops):
-    fg_buses = folium.FeatureGroup(name="Bus locations")
+    return map
+
+def add_bus_feature_group(map, buses):
     for row in buses:
         direction = ""
         if row.dir == 1:
@@ -17,16 +30,8 @@ def add_bus_feature_group(map, buses, stops):
             direction = "WEST"
         elif row.dir == 4:
             direction = "NORTH"
-        information = f'Route: {row.route}\nDirection: {direction}\nBus Number: {row.block}'
-        fg_buses.add_child(folium.Marker(location=[row.lat, row.lon], popup=(folium.Popup(information)), icon=folium.Icon(color='blue', icon='bus', prefix='fa')))
-    map.add_child(fg_buses)
-
-    fg_stops = folium.FeatureGroup(name="Bus Stops")
-    for row in stops:
-        name = row.name
-        lat = row.lat
-        lon = row.lon
-        fg_stops.add_child(folium.Marker(location=[lat, lon], popup=folium.Popup(f'Stop Name: {name}'), icon=folium.Icon(color='red', icon_color='white', icon='sign', prefix='fa')))
-    map.add_child(fg_stops)
-
+        route = row.route
+        bus = row.block
+        information = f'Route:{route}\nDirection:{direction}\nBus Number:{bus}'
+        folium.Marker(location=[row.lat, row.lon], popup=(folium.Popup(information)), icon=folium.Icon(color='blue', icon_color='white', icon='bus', prefix='fa')).add_to(map)
     return map
