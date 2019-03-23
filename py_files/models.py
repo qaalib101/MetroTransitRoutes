@@ -10,23 +10,28 @@ class BaseModel(Model):
 
 
 class VehicleLocation(BaseModel):
+    block = PrimaryKeyField(unique=True)
     route = IntegerField()
-    lat = DecimalField(max_digits=10)
-    lon = DecimalField(max_digits=10)
+    lat = FloatField()
+    lon = FloatField()
     dir = IntegerField()
+
+
+
+class Departure(BaseModel):
+    actual = BooleanField()
     block = IntegerField()
+    dText = TextField()
+    dTime = TextField()
+    stoplat = FloatField()
+    stoplon = FloatField()
+    name = TextField()
 
-
-class BusStop(BaseModel):
-    stopID = PrimaryKeyField(unique=True)
-    name = CharField()
-    lat = DecimalField(max_digits=10)
-    lon = DecimalField(max_digits=10)
 
 
 def create_tables():
     with db:
-        db.create_tables([VehicleLocation, BusStop])
+        db.create_tables([VehicleLocation])
 
 
 def replace_vehicles():
@@ -34,57 +39,79 @@ def replace_vehicles():
     q.execute()
 
 
-def replace_stops():
-    q = BusStop.delete()
+def replace_departures():
+    q = Departure.delete()
     q.execute()
 
 
 def add_vehicle(vehicle):
-    VehicleLocation.create(
-        route=vehicle['Route'],
-        lat=vehicle['VehicleLatitude'],
-        lon=vehicle['VehicleLongitude'],
-        dir=vehicle['Direction'],
-        block=vehicle['BlockNumber']
-    )
-
-
-def add_stop(stop):
-    BusStop.create(
-        stopID=stop['stop_id'],
-        name=stop['stop_name'],
-        lat=stop['stop_lat'],
-        lon=stop['stop_lon'],
-    )
-
-
-def get_vehicles(route):
     with db.atomic() as transaction:
         try:
-            if int(route) == 0:
-                vehicles = VehicleLocation.select().execute()
-                return vehicles
-            else:
-                vehicles = VehicleLocation.select().where(VehicleLocation.route == route)
-                return vehicles
+            VehicleLocation.create(
+                route=vehicle['Route'],
+                lat=vehicle['VehicleLatitude'],
+                lon=vehicle['VehicleLongitude'],
+                dir=vehicle['Direction'],
+                block=vehicle['BlockNumber']
+            )
+        except OperationalError as e:
+            transaction.rollback()
+
+
+
+def add_departure(d):
+    with db.atomic() as transaction:
+        try:
+            Departure.create(
+                actual=d['Actual'],
+                block=d['BlockNumber'],
+                dtext=d['DepartureText'],
+                dTime=d['DepartureTime'],
+                stoplat=d['lat'],
+                stoplon=d['lon'],
+                name=d['name']
+            )
+        except OperationalError as e:
+            transaction.rollback()
+
+
+def get_departures():
+    with db.atomic() as transaction:
+        try:
+            results = []
+            query = Departure.select()
+            cursor = db.execute(query)
+            ncols = len(cursor.description)
+            colnames = [cursor.description[i][0] for i in range(ncols)]
+            for row in cursor.fetchall():
+                res = {}
+                for i in range(ncols):
+                    res[colnames[i]] = row[i]
+                results.append(res)
+            return results
         except OperationalError:
             transaction.rollback()
 
 
-def get_stops():
-    stops = BusStop.select()
-    return stops
 
+def get_vehicles_from_database(route):
+    with db.atomic() as transaction:
+        try:
+            if int(route) == 0:
+                results = []
+                query = VehicleLocation.select()
+                cursor = db.execute(query)
+                ncols = len(cursor.description)
+                colnames = [cursor.description[i][0] for i in range(ncols)]
+                for row in cursor.fetchall():
+                    res = {}
+                    for i in range(ncols):
+                        res[colnames[i]] = row[i]
+                    results.append(res)
+                return results
+        except OperationalError:
+            transaction.rollback()
 
-def get_routes():
-    query = VehicleLocation.select(VehicleLocation.route).group_by(VehicleLocation.route)
-    routes = [row for row in query]
-    return routes
-
-def get_mean_locations():
-    query = VehicleLocation.select(fn.AVG(VehicleLocation.lat).alias('meanLat'), fn.AVG(VehicleLocation.lon).alias('meanLon'))
-    query.execute(db)
-    return query
 
 
 class DatabaseError(Exception):

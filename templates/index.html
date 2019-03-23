@@ -1,25 +1,29 @@
 {% extends "base.html" %}
 
 {% block content %}
+    {{header}}
 
-{{header}}
-    <form action={{url_for('get_map')}} method="POST">
-    <select id="selected_route" name="routes">
-        <option value=0>
-            Select all routes
+    <select id="selected_route" name="radius">
+        <option value=3>
+            Default Radius
         </option>
-        {% for row in routes %}
-            <option value="{{ row.route }}">{{row.route}}</option>
-        {% endfor %}
+        <option value=1>
+            1 mile away
+        </option>
+        <option value=2>
+            2 miles away
+        </option>
+        <option value=4>
+            4 miles away
+        </option>
     </select>
-    <button class = "btn btn-primary" type="submit">
-        Show Map
+    <button id="show_button" class = "btn btn-primary" type="button">
+        Show Close Buses
     </button>
-    </form>
-
+{% endblock content %}
 
 <!-- display any temporary flash messages  -->
 {% for message in get_flashed_messages() %}
 <p class='flashed_message'>{{ message}}</p>
 {% endfor %}
-{% endblock %}
+

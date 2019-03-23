@@ -1,42 +1,47 @@
 from py_files.models import *
 from py_files.transit_map import *
 import pandas as pd
-import os
-def init_map(route):
-    vehicles = get_vehicles(route)
-    map = add_vehicles_and_stops_to_map(vehicles)
+import json
 
 
+def get_locations_json(radius):
+    stops = get_stop_info()
+    radius = float(radius)
+    location = get_location()
+    vehicles = get_vehicles_from_database(0)
+    near_stops = filter_stops(stops, location, radius)
+    departures = get_departures(near_stops)
+    departures = order_departures(departures, ['BlockNumber', 'DepartureTime'])
+    near_vehicles = get_vehicles(departures, vehicles)
+    return_json = {
+        "center": location,
+        "departures": departures,
+        "vehicles": near_vehicles
+    }
+    return json.dumps(return_json)
 
-def get_routes_from_database():
-    routes = get_routes()
-    return routes
-def get_vehicle_locations(route):
-    locations = pd.read_json(f'http://svc.metrotransit.org/NexTrip/VehicleLocations/{route}?format=json', orient='columns')
-    return locations
 
-def add_vehicles_to_database(route):
-    locations = get_vehicle_locations(route)
+def add_departures_to_database(departures):
+    for d in departures:
+        add_departure(d)
+
+def get_user_location():
+    location = get_location()
+    json_location = json.dumps(location)
+    return json_location
+
+
+def add_vehicles_to_database(vehicles):
     replace_vehicles()
-    for index, row in locations.iterrows():
+    for i, row in vehicles.iterrows():
         add_vehicle(row)
 
-def add_vehicles_and_stops_to_map(vehicles):
-    query = get_mean_locations()
-    meanLon = 0.0
-    meanLat = 0.0
-    for row in query:
-        meanLat = row.meanLat
-        meanLon = row.meanLon
-    map = get_main_map(meanLat, meanLon, vehicles)
-    return map
+def get_all_vehicles(route):
+    vehicles = pd.read_json(f'http://svc.metrotransit.org/NexTrip/VehicleLocations/{route}?format=json')
+    create_tables()
+    add_vehicles_to_database(vehicles)
 
 def get_stop_info():
     stops = pd.read_csv('transit_schedule/stops.txt')
     return stops
 
-
-def add_stops_to_database(stops):
-    replace_stops()
-    for index, row in stops.iterrows():
-        add_stop(row)
