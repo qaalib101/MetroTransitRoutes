@@ -2,8 +2,7 @@
 
 {% block content %}
     {{header}}
-
-    <select id="selected_route" name="radius">
+<select id="selected_route" name="radius">
         <option value=3>
             Default Radius
         </option>
@@ -20,6 +19,13 @@
     <button id="show_button" class = "btn btn-primary" type="button">
         Show Close Buses
     </button>
+    <button id="clear_button" class="btn btn-warning">
+    Clear directions and markers
+    </button>
+    <button id="clear_direction" class="btn btn-warning">
+    Clear directions
+    </button>
+
 {% endblock content %}
 
 <!-- display any temporary flash messages  -->

@@ -5,7 +5,6 @@ from operator import itemgetter
 import os
 import functools
 from re import sub, split
-import pandas as pd
 def get_location():
     API_KEY = os.environ['GEO_API_KEY']
     send_url = f'http://api.ipstack.com/check?access_key={API_KEY}'
@@ -43,25 +42,26 @@ def get_departures(stops):
         name = stop['name']
         req = requests.get(f'http://svc.metrotransit.org/NexTrip/{id}?format=json')
         data = req.json()
+        if len(departures) > 1000:
+            break
         for d in data:
-            if d == data[4]:
-                break
+            index = data.index(d)
             unix = d['DepartureTime'].split('-')[0]
             unix = sub("[^0-9]", "", unix)
             d['DepartureTime'] = unix
             d['lat'] = lat
             d['lon'] = lon
             d['name'] = name
-        if len(data) > 0:
-            departures.extend(data)
-        if len(departures) > 2000:
-            break
+            if index > 4:
+                break
+            if len(data) > 0:
+                departures.append(d)
     return departures
 
 
 def get_vehicles(departures, vehicles):
     blocks =[d['BlockNumber'] for d in departures]
-    filtered_vehicles = [d for d in vehicles if d['block'] in blocks]
+    filtered_vehicles = [d for d in vehicles if d['BlockNumber'] in blocks]
     return filtered_vehicles
 
 

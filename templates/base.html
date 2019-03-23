@@ -25,6 +25,8 @@
         width: 100%;
     }
 </style>
+<script src="{{ url_for('static', filename='render_map.js') }}"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCDIehXRmSgi0yUudZcHyGR1WCDYh8tntc&callback=initMap" async defer type="text/javascript"></script>
 </head>
 
 <body>
@@ -34,27 +36,6 @@
   {% endblock %}
   <div id="map" style="width: 500px; height: 500px;"></div>
   {% block scripts %}
-      <script>
-        function initMap() {
-            $.get('/get_location', function (data) {
-                var obj = JSON.parse(data);
-                map = new google.maps.Map(document.getElementById('map'), {
-                    center: {lat: obj.lat, lng: obj.lon},
-                    zoom: 15
-                });
-                var marker = new google.maps.Marker({
-                    position: new google.maps.LatLng(
-                        obj.center.lat, obj.center.lon
-                    ),
-                    title: 'My Location',
-                    map: map
-                });
-            });
-        }
-      </script>
-
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCDIehXRmSgi0yUudZcHyGR1WCDYh8tntc&callback=initMap" async defer type="text/javascript"></script>
-      <script src="./static/render_map.js"></script>
   {% endblock %}
 </body>
 </html>

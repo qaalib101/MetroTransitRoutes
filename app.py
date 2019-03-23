@@ -5,12 +5,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 app = Flask(__name__)
 
 
-@app.before_first_request
-def run_clock_reset():
-    get_all_vehicles(0)
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(lambda: get_all_vehicles(0), trigger='interval', seconds=30)
-    scheduler.start()
 
 
 @app.route('/')
@@ -20,7 +14,8 @@ def index():
 
 @app.route('/get_map', methods=['POST'])
 def get_map():
-    locations = get_locations_json(request.form["radius"])
+    radius = request.form["radius"]
+    locations = get_locations_json(radius)
     return locations
 
 

@@ -10,7 +10,7 @@ class BaseModel(Model):
 
 
 class VehicleLocation(BaseModel):
-    block = PrimaryKeyField(unique=True)
+    block = IntegerField()
     route = IntegerField()
     lat = FloatField()
     lon = FloatField()
@@ -21,17 +21,17 @@ class VehicleLocation(BaseModel):
 class Departure(BaseModel):
     actual = BooleanField()
     block = IntegerField()
-    dText = TextField()
-    dTime = TextField()
+    dText = CharField(null=True)
+    dTime = IntegerField()
     stoplat = FloatField()
     stoplon = FloatField()
-    name = TextField()
+    name = CharField(null=True)
 
 
 
 def create_tables():
     with db:
-        db.create_tables([VehicleLocation])
+        db.create_tables([VehicleLocation, Departure])
 
 
 def replace_vehicles():
