@@ -1,9 +1,13 @@
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 from flask import render_template, flash, redirect, url_for, request, jsonify
 from py_files.transitHandler import *
 from apscheduler.schedulers.background import BackgroundScheduler
-app = Flask(__name__)
 
+app = Flask(__name__)
+app.config.from_object(os.environ['APP_SETTINGS'])
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
 
 
@@ -26,6 +30,5 @@ def get_location():
 
 
 if __name__ == '__main__':
-    app.config['DEBUG'] = True
     app.run(debug=True)
 

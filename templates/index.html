@@ -25,7 +25,9 @@
     <button id="clear_direction" class="btn btn-warning">
     Clear directions
     </button>
-
+    <div id="map" style="width: 500px; height: 500px;"></div>
+    <script src="{{ url_for('static', filename='render_map.js') }}"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCDIehXRmSgi0yUudZcHyGR1WCDYh8tntc" async defer type="text/javascript"></script>
 {% endblock content %}
 
 <!-- display any temporary flash messages  -->

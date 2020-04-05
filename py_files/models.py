@@ -1,9 +1,9 @@
 from peewee import *
+from app import db
 from playhouse.shortcuts import model_to_dict
-db = SqliteDatabase('metro_buses.db')
 
 
-class BaseModel(Model):
+class BaseModel(db.Model):
 
     class Meta:
         database = db
