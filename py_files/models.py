@@ -1,37 +1,45 @@
-from peewee import *
 from app import db
 from playhouse.shortcuts import model_to_dict
 
 
-class BaseModel(db.Model):
+class VehicleLocation(db.Model):
+    block = db.Column(db.Integer, primary_key=True)
+    route = db.Column(db.Integer)
+    lat = db.Column(db.Float)
+    lon = db.Column(db.Float)
+    dir = db.Column(db.Integer)
 
-    class Meta:
-        database = db
+    def __init__(self, block, route, lat, lon, dir):
+        self.block = block
+        self.route = route
+        self.lat = lat
+        self.lon = lon
+        self.dir = dir
 
 
-class VehicleLocation(BaseModel):
-    block = IntegerField()
-    route = IntegerField()
-    lat = FloatField()
-    lon = FloatField()
-    dir = IntegerField()
+class Departure(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    actual = db.Column(db.Float)
+    block = db.Column(db.Integer)
+    dText = db.Column(db.String(), nullable=True)
+    dTime = db.Column(db.Integer)
+    stop_lat = db.Column(db.Float)
+    stop_lon = db.Column(db.Float)
+    name = db.Column(db.String(), nullable=True)
 
-
-
-class Departure(BaseModel):
-    actual = BooleanField()
-    block = IntegerField()
-    dText = CharField(null=True)
-    dTime = IntegerField()
-    stoplat = FloatField()
-    stoplon = FloatField()
-    name = CharField(null=True)
-
+    def __init__(self, actual, block, dText, dTime, stop_lat, stop_lon, name):
+        self.actual = actual
+        self.block = block
+        self.dText = dText
+        self.dTime = dTime
+        self.stop_lat = stop_lat
+        self.stop_lon = stop_lon
+        self.name = name
 
 
 def create_tables():
     with db:
-        db.create_tables([VehicleLocation, Departure])
+        db.create_all()
 
 
 def replace_vehicles():
@@ -44,39 +52,47 @@ def replace_departures():
     q.execute()
 
 
-def add_vehicle(vehicle):
-    with db.atomic() as transaction:
-        try:
-            VehicleLocation.create(
-                route=vehicle['Route'],
-                lat=vehicle['VehicleLatitude'],
-                lon=vehicle['VehicleLongitude'],
-                dir=vehicle['Direction'],
-                block=vehicle['BlockNumber']
+def add_vehicles(vehicles):
+
+    with db.session() as transaction:
+        for vehicle in vehicles:
+            transaction.add(
+                VehicleLocation(
+                    route=vehicle['Route'],
+                    lat=vehicle['VehicleLatitude'],
+                    lon=vehicle['VehicleLongitude'],
+                    dir=vehicle['Direction'],
+                    block=vehicle['BlockNumber'])
             )
-        except OperationalError as e:
+        try:
+            transaction.commit()
+        except Exception as e:
+            print(e)
             transaction.rollback()
 
 
-
-def add_departure(d):
-    with db.atomic() as transaction:
-        try:
-            Departure.create(
-                actual=d['Actual'],
-                block=d['BlockNumber'],
-                dtext=d['DepartureText'],
-                dTime=d['DepartureTime'],
-                stoplat=d['lat'],
-                stoplon=d['lon'],
-                name=d['name']
+def add_departures(departures):
+    with db.session() as transaction:
+        for d in departures:
+            transaction.add(
+                Departure(
+                    actual=d['Actual'],
+                    block=d['BlockNumber'],
+                    dText=d['DepartureText'],
+                    dTime=d['DepartureTime'],
+                    stop_lat=d['lat'],
+                    stop_lon=d['lon'],
+                    name=d['name'])
             )
-        except OperationalError as e:
+        try:
+            transaction.commit()
+        except Exception as e:
+            print(e)
             transaction.rollback()
 
 
 def get_departures():
-    with db.atomic() as transaction:
+    with db.session() as transaction:
         try:
             results = []
             query = Departure.select()
@@ -89,13 +105,12 @@ def get_departures():
                     res[colnames[i]] = row[i]
                 results.append(res)
             return results
-        except OperationalError:
+        except Exception:
             transaction.rollback()
 
 
-
 def get_vehicles_from_database(route):
-    with db.atomic() as transaction:
+    with db.session() as transaction:
         try:
             if int(route) == 0:
                 results = []
@@ -109,9 +124,8 @@ def get_vehicles_from_database(route):
                         res[colnames[i]] = row[i]
                     results.append(res)
                 return results
-        except OperationalError:
+        except Exception:
             transaction.rollback()
-
 
 
 class DatabaseError(Exception):

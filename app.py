@@ -1,14 +1,15 @@
 from flask import Flask
+import os
 from flask_sqlalchemy import SQLAlchemy
 from flask import render_template, flash, redirect, url_for, request, jsonify
 from py_files.transitHandler import *
 from apscheduler.schedulers.background import BackgroundScheduler
 
+BASE_DIR = os.path.dirname(__file__)
 app = Flask(__name__)
 app.config.from_object(os.environ['APP_SETTINGS'])
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-
 
 
 @app.route('/')
