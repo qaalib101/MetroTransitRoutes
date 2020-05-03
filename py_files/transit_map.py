@@ -5,6 +5,8 @@ from operator import itemgetter
 import os
 import functools
 from re import sub, split
+
+
 def get_location():
     API_KEY = os.environ['GEO_API_KEY']
     send_url = f'http://api.ipstack.com/check?access_key={API_KEY}'
@@ -14,19 +16,19 @@ def get_location():
     return location
 
 
-def order_departures(items, columns):
-    comparers = [((itemgetter(col[1:].strip()), -1) if col.startswith('-') else
-                  (itemgetter(col.strip()), 1)) for col in columns]
-
-    def comparer(left, right):
-        for fn, mult in comparers:
-            result = cmp(fn(left), fn(right))
-            if result:
-                return mult * result
-            else:
-                return 0
-
-    return sorted(items, key=functools.cmp_to_key(comparer))
+# def order_departures(items, columns):
+#     comparers = [((itemgetter(col[1:].strip()), -1) if col.startswith('-') else
+#                   (itemgetter(col.strip()), 1)) for col in columns]
+#
+#     def comparer(left, right):
+#         for fn, mult in comparers:
+#             result = cmp(fn(left), fn(right))
+#             if result:
+#                 return mult * result
+#             else:
+#                 return 0
+#
+#     return sorted(items, key=functools.cmp_to_key(comparer))
 
 
 def cmp(a, b):
@@ -49,9 +51,9 @@ def get_departures(stops):
             unix = d['DepartureTime'].split('-')[0]
             unix = sub("[^0-9]", "", unix)
             d['DepartureTime'] = unix
-            d['lat'] = lat
-            d['lon'] = lon
-            d['name'] = name
+            d['DepartureLatitude'] = lat
+            d['DepartureLatitude'] = lon
+            d['Name'] = name
             if index > 4:
                 break
             if len(data) > 0:
@@ -99,7 +101,16 @@ def filter_vehicles(vehicles, location, miles):
     return locations
 
 
-
 def return_distance(degrees, location, lat, lon):
     distance = math.sqrt((location["lat"] - lat) ** 2 + (location["lon"] - lon) ** 2)
     return True if distance <= degrees else False
+
+
+def get_stop_info():
+    stops = pd.read_csv('transit_schedule/stops.txt')
+    return stops
+
+
+def get_all_vehicles(route):
+    vehicles = requests.get(f'http://svc.metrotransit.org/NexTrip/VehicleLocations/{route}?format=json')
+    return vehicles.json()

@@ -1,4 +1,4 @@
-from py_files.models import *
+from py_files.model_driver import *
 from py_files.transit_map import *
 import pandas as pd
 import json
@@ -7,7 +7,7 @@ from threading import Thread
 
 
 def get_locations_json(radius):
-    get_metro_transit_zip_folder()
+    #get_metro_transit_zip_folder()
     # stops = get_stop_info()
     # radius = float(radius)
     # location = get_location()
@@ -25,17 +25,19 @@ def get_locations_json(radius):
     #     "vehicles": near_vehicles
     # }
 
-    return json.dumps(return_json)
+    # return json.dumps(return_json)
+    return 0
 
 
-def add_vehicles_and_departures(vehicles, departures):
-    create_tables()
-    add_vehicles_to_database(vehicles)
-    add_departures_to_database(departures)
+def add_vehicles_and_departures():
+    add_vehicles_to_database()
+    add_departures_to_database()
     print("added to database")
 
 
-def add_departures_to_database(departures):
+def add_departures_to_database():
+    stops = get_stop_info()
+    departures = get_departures(stops)
     add_departures(departures)
 
 
@@ -45,20 +47,9 @@ def get_user_location():
     return json_location
 
 
-def add_vehicles_to_database(vehicles):
-
+def add_vehicles_to_database():
+    vehicles = get_all_vehicles(0)
     add_vehicles(vehicles)
-
-
-def get_all_vehicles(route):
-    vehicles = requests.get(f'http://svc.metrotransit.org/NexTrip/VehicleLocations/{route}?format=json')
-    return vehicles.json()
-
-
-def get_stop_info():
-
-    stops = pd.read_csv('transit_schedule/stops.txt')
-    return stops
 
 
 def run_threads():
